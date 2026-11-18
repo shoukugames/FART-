@@ -12,6 +12,8 @@ import threading
 from array import array
 from pathlib import Path
 
+from . import WEB
+
 import pygame
 
 SR = 22050
@@ -174,7 +176,7 @@ def _worker():
 
 def init():
     """Call before pygame.init(). Starts background synthesis."""
-    global _enabled, _channels
+    global _enabled, _channels, SR, _pending
     try:
         pygame.mixer.pre_init(SR, -16, 1, 512)
         pygame.mixer.init()
@@ -182,6 +184,10 @@ def init():
         if not info:
             return
         _channels = info[2]
+        if WEB and info[0] != SR:
+            # Browsers mix at their own rate (48000 Hz) and closing and reopening the audio device
+            # hangs the page: make the sounds at that rate instead (the synth reads SR as it runs).
+            SR = info[0]
         if info[0] != SR:  # device forced another rate; resample is not worth it, stay silent
             pygame.mixer.quit()
             pygame.mixer.init(SR, -16, _channels, 512)
@@ -190,9 +196,23 @@ def init():
                 return
         pygame.mixer.set_num_channels(16)
         _enabled = True
-        threading.Thread(target=_worker, daemon=True).start()
+        if WEB:
+            _pending = True    # browsers run no Python threads: pump() builds the sounds on a frame
+        else:
+            threading.Thread(target=_worker, daemon=True).start()
     except pygame.error:
         _enabled = False
+
+
+_pending = False
+
+
+def pump():
+    """Browser: build the sounds once, on a frame after the game is on screen."""
+    global _pending
+    if _pending:
+        _pending = False
+        _worker()
 
 
 def configure(volume=None, muted=None):

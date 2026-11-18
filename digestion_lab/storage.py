@@ -4,6 +4,10 @@ import os
 import sys
 from pathlib import Path
 
+from . import WEB
+
+_WEB_KEY = 'digestion-lab/save.json'  # browser: localStorage key (files vanish with the page)
+
 
 def _data_dir():
     if sys.platform == 'win32':
@@ -31,7 +35,12 @@ def defaults():
 def load(path=None):
     d = defaults()
     try:
-        raw = json.loads(Path(path or SAVE_PATH).read_text(encoding='utf-8'))
+        if WEB:
+            import platform  # pygbag's bridge to the page
+            stored = platform.window.localStorage.getItem(_WEB_KEY)
+            raw = json.loads(str(stored)) if stored else {}
+        else:
+            raw = json.loads(Path(path or SAVE_PATH).read_text(encoding='utf-8'))
         for k, v in d.items():
             if isinstance(raw.get(k), dict):
                 v.update(raw[k])
@@ -41,6 +50,13 @@ def load(path=None):
 
 
 def persist(save, path=None):
+    if WEB:
+        try:
+            import platform  # pygbag's bridge to the page
+            platform.window.localStorage.setItem(_WEB_KEY, json.dumps(save, ensure_ascii=False))
+        except Exception:  # noqa: BLE001
+            pass
+        return
     p = Path(path or SAVE_PATH)
     try:
         p.parent.mkdir(parents=True, exist_ok=True)

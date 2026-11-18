@@ -8,7 +8,7 @@ import math
 import pygame
 import pygame.gfxdraw as gfx
 
-from . import __version__, fonts
+from . import WEB, __version__, fonts
 from .achievements import ACHIEVEMENTS
 from .foods import FOODS
 from .i18n import t, L, get_lang
@@ -391,8 +391,7 @@ def _screen_title(app, surf, W, H):
     y = r.bottom - 52
     chips = [(f"{t('foodLog')}  {len(save['tried'])}/{len(FOODS)}", 'go', 'foodlog'),
              (f"{t('achievements')}  {len(save['achievements'])}/{len(ACHIEVEMENTS)}", 'go', 'achievements'),
-             (t('settings'), 'go', 'settings'),
-             (t('exit'), 'exit', None)]
+             (t('settings'), 'go', 'settings')] + ([] if WEB else [(t('exit'), 'exit', None)])  # no exit in a browser
     widths = [fonts.get(12, True).size(c[0])[0] + 28 for c in chips]
     cx = r.centerx - (sum(widths) + 8 * (len(chips) - 1)) // 2
     for (label, action, arg), cw in zip(chips, widths):

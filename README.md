@@ -22,6 +22,21 @@ and on Windows it's under the .exe's **Properties → Details**.
 Japanese text uses fonts already installed on the system (Yu Gothic / Meiryo on Windows;
 Noto Sans CJK or similar on Linux, which the .deb recommends).
 
+## Play in the browser
+
+Digestion Lab also runs in a web browser, on computers, phones and tablets, with nothing to
+install: <https://shoukugames.org/play/digestion-lab/> (test page). Tap a food, then tap
+Burp, Fart or Smooth. Scores, achievements and settings are saved in the browser.
+
+```bash
+python3 -m pip install pygame-ce pygbag  # plus ffmpeg on PATH (or FFMPEG=/path/to/ffmpeg)
+python3 tools/build_web.py               # -> build/web/: upload the folder as-is
+```
+
+The build uses [pygbag](https://pygame-web.github.io/), which also converts the sounds to OGG.
+`main.py` is the web entry point; the browser-only parts switch on only in the browser. The
+`.apk` file pygbag writes is its bundle of game files, not an Android app.
+
 ## How to play
 
 1. Pick a mode and difficulty on the title screen.

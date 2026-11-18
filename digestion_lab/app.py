@@ -8,7 +8,7 @@ import time
 from . import audio  # noqa: F401  (imported before pygame.init so the mixer can be pre-initialised)
 import pygame
 
-from . import __version__, fonts, music, storage, ui
+from . import WEB, __version__, fonts, music, storage, ui
 from .achievements import ACH_BY_ID, evaluate
 from .foods import FOODS
 from .i18n import set_lang, get_lang, t, L
@@ -87,6 +87,9 @@ class App:
 
     # ---------- display ----------
     def _apply_display_mode(self):
+        if WEB:  # a fixed-size canvas; the page scales it to fit the browser window
+            self.window = pygame.display.set_mode(WINDOW_SIZE)
+            return
         if self.save['settings'].get('fullscreen'):
             self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         else:
@@ -307,7 +310,7 @@ class App:
             self.dragging_volume = True
             self.set_volume_from_mouse(pygame.mouse.get_pos()[0])
         elif name == 'exit':
-            self.running = False
+            self.running = WEB  # in a browser there is nothing to quit to
 
     def set_volume_from_mouse(self, mx):
         if not self.slider_rect:
@@ -356,7 +359,7 @@ class App:
     def process_events(self):
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
-                self.running = False
+                self.running = WEB  # in a browser there is nothing to quit to
             elif e.type == pygame.KEYDOWN:
                 self.on_key(e)
             elif e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
@@ -431,14 +434,31 @@ class App:
             win.blit(frame, (int(math.sin(self.clock_time * 70) * 10 * k), int(random.uniform(-3, 3) * k)))
         pygame.display.flip()
 
+    def frame(self):
+        dt = min(0.05, self.clock.tick(60) / 1000)
+        self.process_events()
+        self.update(dt)
+        self.draw()
+
     def run(self):
         while self.running:
-            dt = min(0.05, self.clock.tick(60) / 1000)
-            self.process_events()
-            self.update(dt)
-            self.draw()
+            self.frame()
         storage.persist(self.save)
         pygame.quit()
+
+    async def run_web(self):
+        """Browser main loop: hands control back to the page after every frame."""
+        import asyncio
+        frames = 0
+        while True:  # a web page has no "quit"; closing the tab ends the game
+            self.running = True
+            if WEB and self.window.get_size() != WINDOW_SIZE:
+                self.window = pygame.display.set_mode(WINDOW_SIZE)  # pygbag may resize the canvas
+            self.frame()
+            frames += 1
+            if frames == 3:
+                audio.pump()
+            await asyncio.sleep(0)
 
 
 def main(argv=None):
