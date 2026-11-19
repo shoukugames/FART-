@@ -161,14 +161,24 @@ def _to_sound(samples):
     return pygame.mixer.Sound(buffer=pcm.tobytes())
 
 
+# Browser build: making the sounds in Python takes seconds there and stalls the game, so
+# tools/build_web.py makes them once, at the browser's 48000 Hz, into web_sounds/<name>.ogg.
+WEB_SOUNDS = Path(__file__).resolve().parent.parent / 'web_sounds'
+WEB_NAMES = ('click', 'gulp', 'ok', 'bad', 'unlock', 'chime', 'tick', 'gameover', 'fizz', 'rumble')  # = _build_all()
+
+
 def _worker():
     global _ready
     try:
         for name in recorded_names():
             _sounds[name] = pygame.mixer.Sound(str(sounds_dir() / f'{name}.wav'))
-        built = _build_all()
-        for k, v in built.items():
-            _sounds[k] = _to_sound(v)
+        if WEB:
+            for k in sorted(set(WEB_NAMES)):
+                _sounds[k] = pygame.mixer.Sound(str(WEB_SOUNDS / f'{k}.ogg'))
+        else:
+            built = _build_all()
+            for k, v in built.items():
+                _sounds[k] = _to_sound(v)
         _ready = True
     except Exception:  # audio is optional; the game runs silently without it
         pass

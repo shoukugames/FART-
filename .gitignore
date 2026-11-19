@@ -8,3 +8,4 @@ dist/
 
 # pygbag working copies (tools/build_web.py)
 *-pygbag.*
+web_sounds/
