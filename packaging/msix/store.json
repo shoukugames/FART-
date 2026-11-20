@@ -1,0 +1,12 @@
+{
+ "_note": "Replace identity_name, publisher and publisher_display_name with the values from Partner Center (Product management -> Product identity) before uploading to the Microsoft Store.",
+ "identity_name": "ShoukuGames.DigestionLab",
+ "publisher": "CN=ShoukuGamesPlaceholder",
+ "publisher_display_name": "Shouku Games",
+ "display_name": "Digestion Lab",
+ "description": "Feed a cartoon buddy and predict what happens next: BURP, FART, or SMOOTH RIDE.",
+ "file_name": "DigestionLab",
+ "exe_name": "DigestionLab.exe",
+ "alias": "shouku-digestion-lab.exe",
+ "device_capabilities": []
+}
